@@ -8,8 +8,8 @@ To run a solution, use: `cargo run -p day_<nmbr> -- -p <path_to_your_challenge.t
 |-----|--------|--------|
 | 1   | solved | solved |
 | 2   | solved | solved |
-| 3   | -      | -      |
-| 4   | -      | -      |
+| 3   | solved | solved |
+| 4   | solved | solved |
 | 5   | -      | -      |
 | 6   | -      | -      |
 | 7   | -      | -      |
