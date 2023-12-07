@@ -12,7 +12,7 @@ To run a solution, use: `cargo run -p day_<nmbr> -- -p <path_to_your_challenge.t
 | 4   | solved | solved  |
 | 5   | solved | solved* |
 | 6   | -      | -       |
-| 7   | -      | -       |
+| 7   | solved | solved  |
 | 8   | -      | -       |
 | 9   | -      | -       |
 | 10  | -      | -       |
