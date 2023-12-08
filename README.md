@@ -11,7 +11,7 @@ To run a solution, use: `cargo run -p day_<nmbr> -- -p <path_to_your_challenge.t
 | 3   | solved | solved  |
 | 4   | solved | solved  |
 | 5   | solved | solved* |
-| 6   | -      | -       |
+| 6   | solved | -       |
 | 7   | solved | solved  |
 | 8   | solved | solved  |
 | 9   | -      | -       |
