@@ -25,7 +25,7 @@ struct Location {
 
 impl Location {
     pub fn parse_from_line(line: &str) -> Self {
-        let stripped = line.replace("=", "").replace("(", "").replace(")", "").replace(")", "").replace(",", "");
+        let stripped = line.replace(['=', '(', ')', ')', ','], "");
         let mut iter = stripped.split_whitespace();
         let name = ArrayString::<3>::from(iter.next().unwrap()).unwrap();
         let left = ArrayString::<3>::from(iter.next().unwrap()).unwrap();
@@ -69,7 +69,7 @@ struct Map {
 
 impl Map {
     pub fn new(instructions: &str) -> Self {
-        let instr = instructions.chars().map(|c_char| Instruction::parse_char(c_char)).collect::<Vec<Instruction>>();
+        let instr = instructions.chars().map(Instruction::parse_char).collect::<Vec<Instruction>>();
         Self {
             locations: HashMap::new(),
             instructions: instr
@@ -155,10 +155,10 @@ impl Map {
             last_diff
         }).collect::<Vec<u64>>();
 
-        let out = out.into_par_iter().reduce(||1, |acc, nmbr| {
+        
+        out.into_par_iter().reduce(||1, |acc, nmbr| {
             lcm(acc, nmbr)
-        });
-        out
+        })
     }
 }
 

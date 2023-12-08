@@ -1,11 +1,11 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap};
 use std::error::Error;
 use std::fmt;
-use std::fmt::write;
+
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use clap::{arg, Parser};
-use clap::builder::Str;
+
 use rayon::prelude::*;
 
 #[derive(Parser, Debug)]
@@ -112,19 +112,15 @@ impl Engine {
                         c_number.push(n)
                     }
                     _ => {
-                        if c_number.len() > 0 {
-                            if self.is_valid_number(start_coord, c_number.len()) {
-                                numbers.push(c_number.parse().unwrap());
-                            }
+                        if !c_number.is_empty() && self.is_valid_number(start_coord, c_number.len()) {
+                            numbers.push(c_number.parse().unwrap());
                         }
                         c_number = String::new();
                     }
                 }
             }
-            if c_number.len() > 0 {
-                if self.is_valid_number(start_coord, c_number.len()) {
-                    numbers.push(c_number.parse().unwrap());
-                }
+            if !c_number.is_empty() && self.is_valid_number(start_coord, c_number.len()) {
+                numbers.push(c_number.parse().unwrap());
             }
         }
         numbers
@@ -163,8 +159,8 @@ impl Engine {
         let mut gears: Vec<(usize, usize)> = vec![];
 
         for y in 0..self.field.len() {
-            let mut c_number: String = String::new();
-            let mut start_coord = (0, 0);
+            let _c_number: String = String::new();
+            let _start_coord = (0, 0);
             for x in 0..self.field.get(0).unwrap().len() {
                 //let c_item = self.field.get(y)?.get(x)?;
                 match self.get_position(x, y) {
@@ -204,50 +200,45 @@ impl Engine {
 
             for x in c_starting_position.0..=c_end_position.0 {
                 for y in c_starting_position.1..=c_end_position.1 {
-                   match self.get_position(x, y) {
-                       Field::Number(n) => {
-                           let mut traverse_x = x;
-                           let mut check_next = true;
-                           // find starting position of number!
-                           while check_next {
-                               match self.get_position(traverse_x, y) {
-                                   Field::Number(_) => {
-                                       if traverse_x == 0 {
-                                           break;
-                                       }
-                                       traverse_x-=1;
+                   if let Field::Number(_n) = self.get_position(x, y) {
+                       let mut traverse_x = x;
+                       let mut check_next = true;
+                       // find starting position of number!
+                       while check_next {
+                           match self.get_position(traverse_x, y) {
+                               Field::Number(_) => {
+                                   if traverse_x == 0 {
+                                       break;
                                    }
-                                   _ => {
-                                       check_next = false;
-                                       // set ptr to last successful traverse!
-                                       traverse_x += 1;
-                                   }
+                                   traverse_x-=1;
                                }
-                           }
-                           check_next = true;
-                           let starting_position_x = traverse_x;
-                           let mut c_number: String = String::new();
-                           while traverse_x != self.field.len() && check_next {
-                               match self.get_position(traverse_x, y) {
-                                   Field::Number(n) => {
-                                       c_number.push(n);
-                                       traverse_x+=1;
-                                   }
-                                   _ => check_next = false
+                               _ => {
+                                   check_next = false;
+                                   // set ptr to last successful traverse!
+                                   traverse_x += 1;
                                }
-                           }
-                           if !c_number.is_empty() {
-                               numbers.insert((starting_position_x, y), c_number);
                            }
                        }
-                       _ => {
-
+                       check_next = true;
+                       let starting_position_x = traverse_x;
+                       let mut c_number: String = String::new();
+                       while traverse_x != self.field.len() && check_next {
+                           match self.get_position(traverse_x, y) {
+                               Field::Number(n) => {
+                                   c_number.push(n);
+                                   traverse_x+=1;
+                               }
+                               _ => check_next = false
+                           }
+                       }
+                       if !c_number.is_empty() {
+                           numbers.insert((starting_position_x, y), c_number);
                        }
                    }
                 }
             }
             if numbers.len() == 2 {
-                ratios.push(numbers.into_iter().map(|c_item| c_item.1.parse::<u64>().unwrap()).product::<u64>().try_into().unwrap());
+                ratios.push(numbers.into_iter().map(|c_item| c_item.1.parse::<u64>().unwrap()).product::<u64>());
             }
         }
 
@@ -261,9 +252,9 @@ impl fmt::Display for Engine {
             for c_line in c_row {
                 write!(f, "{}", c_line);
             }
-            write!(f, "\n");
+            writeln!(f);
         }
-        return write!(f, "");
+        write!(f, "")
     }
 }
 
@@ -278,6 +269,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     let valid_numbers = engine.get_valid_part_numbers();
     println!("Part 1:\t{:?}", valid_numbers.iter().sum::<u64>());
 
-    println!("{:?}", engine.get_gear_ratios().iter().sum::<u64>());
+    println!("Part 2:\t{:?}", engine.get_gear_ratios().iter().sum::<u64>());
     Ok(())
 }

@@ -61,9 +61,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     let input = reader.lines().map(|c_item| c_item.unwrap()).collect::<Vec<String>>();
     // Cannot use rayon because order is important!
     let game: Vec<Scratchcard> = input.iter().map(|c_line| {
-        let (card_id_str, game_input) = c_line.split_once(":").unwrap();
+        let (card_id_str, game_input) = c_line.split_once(':').unwrap();
         let card_id = card_id_str.split_whitespace().last().unwrap().parse::<u32>().unwrap();
-        let mut number_iterator = game_input.split("|");
+        let mut number_iterator = game_input.split('|');
         let winning_numbers = parse_numbers(number_iterator.next().unwrap());
         let owned_numbers = parse_numbers(number_iterator.next().unwrap());
         Scratchcard::new(card_id, winning_numbers, owned_numbers)
@@ -80,7 +80,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // Cannot use rayon because order is important!
     game.iter().for_each(|c_scratchcard| {
-        let c_points = c_scratchcard.find_winning_numbers().iter().count();
+        let c_points = c_scratchcard.find_winning_numbers().len();
         //let c_amount_lookup_id = c_scratchcard.id -1;
         let c_amount_lookup = *amount_of_cards_lookup.get(c_scratchcard.id as usize - 1).unwrap();
         let _ = &amount_of_cards_lookup[c_scratchcard.id as usize..c_scratchcard.id as usize+c_points].par_iter_mut().for_each(|c_number| {

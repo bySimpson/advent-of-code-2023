@@ -57,7 +57,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         c_race.amount_of_times_to_beat()
     }).product::<u64>();
 
-    let race_part_2 = Race::new(&time_str.replace(" ", ""),&distance_str.replace(" ", ""));
+    let race_part_2 = Race::new(&time_str.replace(' ', ""),&distance_str.replace(' ', ""));
 
     println!("Part 1:\t{:?}", part_1);
     println!("Part 2:\t{:?}", race_part_2.amount_of_times_to_beat());

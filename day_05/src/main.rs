@@ -2,7 +2,7 @@
 use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::ops::{Range, RangeInclusive};
+use std::ops::{RangeInclusive};
 use clap::Parser;
 use rayon::prelude::*;
 
@@ -98,17 +98,17 @@ impl Game {
         assert!(self.maps.len() >= map_type as usize);
         let c_map = self.maps.get(map_type as usize).unwrap();
         let found_map_line = c_map.lines.par_iter().find_any(|generic_map_line: &&GenericMapLine| {
-           generic_map_line.source <= source && source <= generic_map_line.source + generic_map_line.range -1 // TODO: -1=!
+           generic_map_line.source <= source && source < generic_map_line.source + generic_map_line.range
         });
 
         match found_map_line {
             Some(gml) => {
-                let out = (gml.destination as i64 + (source as i64 - gml.source as i64)) as u64;
-                return out;
+                
+                (gml.destination as i64 + (source as i64 - gml.source as i64)) as u64
             }
             None => {
                 // same source
-                return source;
+                source
             }
         }
     }
@@ -174,11 +174,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             // seeds!
             game.set_seeds(c_line.as_str());
             game.set_seeds_part_2(c_line.as_str());
-        } else if empty_lines_counter >= 0 {
-            if c_line.split_whitespace().count() == 3 {
-                // ignore first line describing map type!
-                c_generic_map.insert_line(c_line.as_str());
-            }
+        } else if empty_lines_counter >= 0 && c_line.split_whitespace().count() == 3 {
+            // ignore first line describing map type!
+            c_generic_map.insert_line(c_line.as_str());
         }
     }
     // also insert last one!

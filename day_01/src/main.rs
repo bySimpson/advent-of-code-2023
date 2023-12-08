@@ -83,7 +83,7 @@ fn do_calculation(input: &Vec<String>) -> i32 {
     for line in input {
         let mut c_number: String = line.chars().filter(|c_char| c_char.is_numeric()).collect();
         if !c_number.is_empty() {
-            c_number = c_number.chars().nth(0).unwrap().to_string() + &c_number.chars().nth_back(0).unwrap().to_string();
+            c_number = c_number.chars().next().unwrap().to_string() + &c_number.chars().nth_back(0).unwrap().to_string();
         }
         parsed.push(c_number.parse::<i32>().unwrap_or(0));
     };

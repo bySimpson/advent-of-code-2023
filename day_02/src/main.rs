@@ -26,7 +26,7 @@ impl Round {
         let mut blue = 0;
         let mut green = 0;
         for c_items in round_input.split(", ") {
-            let (amount_str, cube_type_str) = c_items.split_once(" ").unwrap();
+            let (amount_str, cube_type_str) = c_items.split_once(' ').unwrap();
             let amount: u32 = amount_str.parse().unwrap();
             match cube_type_str {
                 "red" => red = amount,
@@ -62,7 +62,7 @@ impl Game {
             if c_round.red > amount_red || c_round.green > amount_green || c_round.blue > amount_blue {
                 return true;
             }
-            return false;
+            false
         }).any(|item| item);
         !out
     }
@@ -89,7 +89,7 @@ fn main() -> Result<()> {
     let input = reader.lines().par_bridge().map(|c_item| c_item.unwrap()).collect::<Vec<String>>();
     let games = input.par_iter().map(|c_line| {
         let (game_id_str, c_game_str) = c_line.split_once(": ").unwrap();
-        let game_id: u32 = game_id_str.split_once(" ").unwrap().1.parse().unwrap();
+        let game_id: u32 = game_id_str.split_once(' ').unwrap().1.parse().unwrap();
         let mut rounds: Vec<Round> = vec![];
         for c_round in c_game_str.split("; ") {
             rounds.push(Round::new(c_round.to_string()));

@@ -3,7 +3,7 @@ use std::cmp::Ordering::{Equal, Greater, Less};
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
-use std::hint;
+
 use std::io::{BufRead, BufReader};
 use clap::Parser;
 use rayon::prelude::*;
@@ -238,32 +238,30 @@ impl Ord for Hand {
 impl PartialOrd for Hand {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         if self.cards == other.cards {
-            return Some(Equal);
+            Some(Equal)
+        }
+        else if self.highest_value != other.highest_value {
+            if self.highest_value < other.highest_value {
+                return Some(Less);
+            }
+            Some(Greater)
         }
         else {
-            if self.highest_value != other.highest_value {
-                if self.highest_value < other.highest_value {
-                    return Some(Less);
-                }
-                return Some(Greater);
-            }
-            else {
-                let mut self_iterator = self.cards.iter();
-                let mut other_iterator = other.cards.iter();
-                let mut counter = 0;
-                while counter < 5 {
-                    let self_val = self_iterator.next().unwrap();
-                    let other_val = other_iterator.next().unwrap();
-                    if self_val != other_val {
-                        if self_val < other_val {
-                            return Some(Less);
-                        }
-                        return Some(Greater);
+            let mut self_iterator = self.cards.iter();
+            let mut other_iterator = other.cards.iter();
+            let mut counter = 0;
+            while counter < 5 {
+                let self_val = self_iterator.next().unwrap();
+                let other_val = other_iterator.next().unwrap();
+                if self_val != other_val {
+                    if self_val < other_val {
+                        return Some(Less);
                     }
-                    counter += 1;
+                    return Some(Greater);
                 }
-                return None;
+                counter += 1;
             }
+            None
         }
     }
 }
