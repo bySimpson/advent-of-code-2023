@@ -5,6 +5,7 @@ use std::io::{BufRead, BufReader};
 use clap::Parser;
 use rayon::prelude::*;
 use arrayvec::ArrayString;
+use num::integer::lcm;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -84,11 +85,11 @@ impl Map {
         *self.locations.get(name).unwrap()
     }
 
-    pub fn get_steps(&self, start: &str, end: &str) -> u32 {
+    pub fn get_steps(&self, start: &str, end: &str) -> u64 {
         let mut running = true;
         let mut c_location = self.get_location(start);
         let dest = ArrayString::<3>::from(end).unwrap();
-        let mut counter: u32 = 0;
+        let mut counter: u64 = 0;
         while running {
             let c_instruction = *self.instructions.get(counter as usize% self.instructions.len()).unwrap();
 
@@ -109,6 +110,56 @@ impl Map {
         }
         counter
     }
+
+    pub fn get_positions_ending_with_x(&self, ending_with: char) -> Vec<Location> {
+        self.locations.par_iter().filter(|c_location| {
+            let (key, _) = *c_location;
+            key.chars().last().unwrap() == ending_with
+        }).map(|c_location| *c_location.1).collect::<Vec<Location>>()
+    }
+
+    pub fn part_02(&self) -> u64 {
+        let current_positions = self.get_positions_ending_with_x('A');
+        let ending_positions = self.get_positions_ending_with_x('Z');
+        let out = current_positions.par_iter().map(|start_pos| {
+            let mut running = true;
+            let mut c_location = *start_pos;
+            let mut counter = 0;
+            let mut last_iteration = 0;
+            let mut last_diff = 0;
+            while running {
+                let c_instruction = *self.instructions.get(counter as usize% self.instructions.len()).unwrap();
+
+                c_location = match c_instruction {
+                    Instruction::Left => {
+                        self.get_location(&c_location.left)
+                    }
+                    Instruction::Right => {
+                        self.get_location(&c_location.right)
+                    }
+                };
+
+                if c_location.name == start_pos.name {
+                    running = false;
+                }
+                if ending_positions.par_iter().any(|c_ending_pos| c_ending_pos.name == c_location.name) {
+                    if last_diff == counter - last_iteration {
+                        running = false;
+                    }
+                    last_diff = counter - last_iteration;
+                    last_iteration = counter;
+                }
+
+                counter+=1;
+            }
+            last_diff
+        }).collect::<Vec<u64>>();
+
+        let out = out.into_par_iter().reduce(||1, |acc, nmbr| {
+            lcm(acc, nmbr)
+        });
+        out
+    }
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -127,5 +178,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     println!("Part 1:\t{:?}", map.get_steps("AAA", "ZZZ"));
+
+    println!("Part 2:\t{:?}", map.part_02());
     Ok(())
 }

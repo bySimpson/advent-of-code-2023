@@ -10,3 +10,4 @@ clap = { version = "4.4", features = ["derive"] }
 anyhow = "1.0"
 rayon = "1.8"
 arrayvec = "0.7.4"
+num = "0.4"
