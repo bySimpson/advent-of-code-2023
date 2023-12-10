@@ -40,14 +40,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
     let file = File::open(args.path)?;
     let reader = BufReader::new(file);
-    let input = reader.lines().map(|c_item| c_item.unwrap()).collect::<Vec<String>>();
+    let input = reader.lines().par_bridge().map(|c_item| c_item.unwrap()).collect::<Vec<String>>();
 
-    let values: Vec<Vec<i64>> = input.iter().map(|c_line| {
-        let mut c_vec: Vec<i64> = vec![];
-        c_line.split_whitespace().for_each(|c_item| {
-            c_vec.push(c_item.parse::<i64>().unwrap());
-        });
-        c_vec
+    let values: Vec<Vec<i64>> = input.par_iter().map(|c_line| {
+        c_line.split_whitespace().map(|c_item| {
+            c_item.parse::<i64>().unwrap()
+        }).collect::<Vec<i64>>()
     }).collect();
 
     let parts = values.iter().fold((0, 0), |mut acc, c_values| {
