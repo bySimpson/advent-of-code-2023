@@ -19,7 +19,7 @@ struct Args {
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 enum Space {
     Galaxy,
-    EmptySpace,
+    EmptySpace
 }
 
 impl Space {
@@ -73,14 +73,11 @@ impl Universe {
         line.chars().for_each(|c_char| {
            c_row.push(Space::from_char(c_char));
         });
-
-        if c_row.par_iter().all(|c_space| *c_space == Space::EmptySpace) {
-            self.grid.push(c_row.clone());
-        }
         self.grid.push(c_row);
     }
 
     pub fn manhattan(&self, point_a: (isize, isize), point_b: (isize, isize)) -> i64 {
+        // https://en.wikipedia.org/wiki/Taxicab_geometry
         let diff_x = point_a.0 - point_b.0;
         let diff_y = point_a.1 - point_b.1;
         (diff_x.abs() + diff_y.abs()) as i64
@@ -100,47 +97,37 @@ impl Universe {
         out
     }
 
-    pub fn create_space(&mut self) {
-        let mut out: Vec<Vec<Space>> = vec![];
-        for c_y in 0..self.grid.len() {
-            let mut c_line: Vec<Space> = vec![];
-            for c_x in 0..self.grid.first().unwrap().len() {
+    pub fn virtual_expand(&self, amount: usize) -> Vec<(isize, isize)> {
+        self.get_coords_of_all_galaxies().par_iter().map(|c_coords| {
+            let mut tiles_to_expand_x = 0;
+            let mut tiles_to_expand_y = 0;
+            for c_y in 0..c_coords.1 {
+                if self.grid.get(c_y as usize).unwrap().par_iter().all(|c_space| *c_space == Space::EmptySpace) {
+                    tiles_to_expand_y += 1;
+                }
+            }
+            for c_x in 0..c_coords.0 {
                 let mut is_empty = true;
                 for c_inner_y in 0..self.grid.len() {
-                    let c_line_item = self.get_position(c_x, c_inner_y);
+                    let c_line_item = self.get_position(c_x as usize, c_inner_y);
 
                     if let Space::Galaxy = c_line_item {
                         is_empty = false;
                         break;
                     }
                 }
-                let c_item = self.get_position(c_x, c_y);
-                c_line.push(c_item);
                 if is_empty {
-                    c_line.push(c_item);
+                    tiles_to_expand_x += 1;
                 }
             }
-            out.push(c_line);
-        }
-
-        self.grid = out;
+            (c_coords.0 + (amount * tiles_to_expand_x) as isize, c_coords.1 + (amount * tiles_to_expand_y) as isize)
+        }).collect::<Vec<(isize, isize)>>()
     }
 
-    pub fn part_01(&self) -> i64 {
-        let coords_galaxies = self.get_coords_of_all_galaxies();
-        println!("{:?}", coords_galaxies);
-
-        /*coords_galaxies.iter().map(|c_coords| {
-            coords_galaxies.iter().fold(0, |mut acc, c_inner_coords| {
-                let manhattan = self.manhattan(*c_coords, *c_inner_coords);
-                println!("{:?} - {:?}: {}", c_coords, c_inner_coords, manhattan);
-                acc += manhattan;
-                acc
-            })
-        }).sum::<i64>();*/
+    pub fn sum_of_all_manhattan_distances(&self, amount_to_expand: usize) -> i64 {
+        let coords_galaxies = self.virtual_expand(amount_to_expand);
 
         coords_galaxies.iter().tuple_combinations().map(|(left, right)| {
-            //println!("{:?}, {:?} - {}", left, right, self.manhattan(*left, *right));
             self.manhattan(*left, *right)
         }).sum::<i64>()
     }
@@ -169,9 +156,8 @@ fn main() -> Result<(), Box<dyn Error>> {
        universe.insert_row(c_row);
     });
 
-    universe.create_space();
-    //println!("{}", universe);
+    println!("Part 1:\t{}", universe.sum_of_all_manhattan_distances(1));
 
-    println!("{}", universe.part_01());
+    println!("Part 2:\t{}", universe.sum_of_all_manhattan_distances(999999));
     Ok(())
 }
