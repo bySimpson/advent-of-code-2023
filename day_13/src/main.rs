@@ -4,6 +4,7 @@ use std::fmt::Formatter;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use clap::Parser;
+use itertools::Itertools;
 use rayon::prelude::*;
 
 #[derive(Parser, Debug)]
@@ -72,13 +73,16 @@ impl Formation {
         self.grid.get(y).unwrap().get(x).unwrap().to_owned()
     }
 
-    pub fn find_row_mirror(&self) -> i64 {
+    pub fn find_row_mirror(&self, allowed_smacks: i64) -> i64 {
         for i in 0..self.grid.len() {
             let mut is_valid = false;
             let mut c_diff = 0;
+            let mut smacked = false;
             loop {
                 if c_diff != 0 && ((i as i64 - c_diff as i64) < 0 || (i + c_diff+1) > (self.grid.len()-1)) {
-                    is_valid = true;
+                    if smacked || allowed_smacks == 0 {
+                        is_valid = true;
+                    }
                     break
                 }
                 if (i as i64 - c_diff as i64) < 0 || (i + c_diff+1) > (self.grid.len()-1) {
@@ -87,7 +91,11 @@ impl Formation {
                 let prev_row = self.grid.get(i-c_diff).unwrap();
                 let fut_row = self.grid.get(i+c_diff+1).unwrap();
                 if *prev_row != *fut_row {
-                    break
+                    if !smacked && allowed_smacks >= Formation::get_amount_differences(prev_row.clone(), fut_row.clone()) {
+                        smacked = true;
+                    } else {
+                        break
+                    }
                 }
                 c_diff += 1;
             }
@@ -106,13 +114,21 @@ impl Formation {
         out
     }
 
-    pub fn find_column_mirror(&self) -> i64 {
+    pub fn get_amount_differences(row_a: Vec<FieldType>, row_b: Vec<FieldType>) -> i64 {
+        let out = row_a.iter().interleave(&row_b).tuples().filter(|(left, right)| left != right).count();
+        out as i64
+    }
+
+    pub fn find_column_mirror(&self, allowed_smacks: i64) -> i64 {
         for i in 0..self.grid.first().unwrap().len() {
             let mut is_valid = false;
             let mut c_diff = 0;
+            let mut smacked = false;
             loop {
                 if c_diff != 0 && ((i as i64 - c_diff as i64) < 0 || (i + c_diff+1) > (self.grid.first().unwrap().len()-1)) {
-                    is_valid = true;
+                    if smacked || allowed_smacks == 0 {
+                        is_valid = true;
+                    }
                     break
                 }
                 if (i as i64 - c_diff as i64) < 0 || (i + c_diff+1) > (self.grid.first().unwrap().len()-1) {
@@ -121,7 +137,11 @@ impl Formation {
                 let prev_column = self.get_column(i-c_diff);
                 let fut_column = self.get_column(i+c_diff+1);
                 if *prev_column != *fut_column {
-                    break
+                    if !smacked && allowed_smacks >= Formation::get_amount_differences(prev_column, fut_column) {
+                        smacked = true
+                    } else {
+                        break
+                    }
                 }
                 c_diff += 1;
             }
@@ -132,12 +152,8 @@ impl Formation {
         0
     }
 
-    pub fn part_01(&self) -> i64 {
-        let out = self.find_row_mirror() * 100 + self.find_column_mirror();
-        if out == 0 {
-            println!("PAAAANIC");
-            println!("{}", self);
-        }
+    pub fn solve(&self, allowed_smacks: i64) -> i64 {
+        let out = self.find_row_mirror(allowed_smacks) * 100 + self.find_column_mirror(allowed_smacks);
         out
     }
 }
@@ -173,10 +189,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     formations.push(c_formation);
 
     let part_01 = formations.par_iter()
-        .map(|c_formation| c_formation.part_01())
+        .map(|c_formation| c_formation.solve(0))
+        .sum::<i64>();
+
+    let part_02 = formations.par_iter()
+        .map(|c_formation| c_formation.solve(1))
         .sum::<i64>();
 
     println!("Part 1:\t{}", part_01);
-
+    println!("Part 2:\t{}", part_02);
     Ok(())
 }
